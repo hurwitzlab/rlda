@@ -1,0 +1,40 @@
+BootStrap: docker
+From: ubuntu:latest
+
+%environment
+    PATH=/app/dada2/scripts:$PATH
+
+%runscript
+    exec /usr/bin/Rscript /app/dada2/scripts/test.r "$@"
+
+%post
+    apt-get update
+    apt-get install -y gnupg2 wget git locales curl libcurl4-gnutls-dev libxml2-dev r-base r-base-dev
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
+    apt-get install -y r-base r-base-dev
+    echo "LC_ALL=en_US.UTF-8" >> /etc/environment
+    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
+    echo "LANG=en_US.UTF-8" > /etc/locale.conf
+    locale-gen en_US.UTF-8
+
+    cat << EOF > .Rprofile
+local({
+  r = getOption("repos")
+  r["CRAN"] = "http://mirrors.nics.utk.edu/cran/"
+  options(repos = r)
+})
+EOF
+
+    wget https://cran.r-project.org/src/contrib/Archive/Rlda/Rlda_0.2.4.tar.gz
+    /usr/bin/R CMD INSTALL Rlda_0.2.4.tar.gz
+
+    # These are mount points for TACC
+    #mkdir /home1
+    #mkdir /work
+    #mkdir /scratch
+
+    # These are mount points for UA/Ocelote
+    mkdir /extra
+    mkdir /xdisk
+    mkdir /rsgrps
+    mkdir -p /cm/shared
